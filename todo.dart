@@ -1,10 +1,9 @@
-import 'dart:async';
-import 'dart:math';
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ToDo {
-  String id;
+  String? id;
   String? todoText;
   bool isDone;
 
@@ -14,10 +13,16 @@ class ToDo {
     this.isDone = false,
   });
 
-  ToDo.fromFirestore(DocumentSnapshot doc)
-      : id = doc.id,
-        todoText = doc['todoText'],
-        isDone = doc['isDone'];
+  List<ToDo> todoList() {
+    return [
+      ToDo(id: '01', todoText: 'Morning Exercise', isDone: true),
+      ToDo(id: '02', todoText: 'Buy Groceries', isDone: true),
+      ToDo(id: '03', todoText: 'Check Emails', isDone: false),
+      ToDo(id: '04', todoText: 'Team Meeting', isDone: false),
+      ToDo(id: '05', todoText: 'Work on Mobile Apps', isDone: false),
+      ToDo(id: '06', todoText: 'Dinner with Jenny', isDone: false),
+    ];
+  }
 
   factory ToDo.fromJson(Map<String, dynamic> json) {
     return ToDo(
@@ -37,61 +42,69 @@ class ToDo {
 }
 
 class TodoProvider extends ChangeNotifier {
-  final List<ToDo> _todos = [];
+  late final List<ToDo> _todos;
   List<ToDo> _filteredTodoList = [];
-  late final StreamSubscription<QuerySnapshot> todosSubscription;
 
   TodoProvider() {
-    startListeningToTodosUpdates();
-    fetchTodosFromFirestore();
+    final todoInstance = ToDo(id: null, todoText: null);
+    _todos = todoInstance.todoList();
   }
-
   List<ToDo> get todos => _filteredTodoList.isNotEmpty ? _filteredTodoList : _todos;
 
-  Future<void> fetchTodosFromFirestore() async {
-    final querySnapshot = await FirebaseFirestore.instance.collection('todos').orderBy('id').get();
-    final todoList = querySnapshot.docs.map((doc) => ToDo.fromFirestore(doc)).toList();
-    _todos.addAll(todoList);
-    notifyListeners();
-  }
-
-  void startListeningToTodosUpdates() {
-    todosSubscription = FirebaseFirestore.instance
-        .collection('todos')
-        .orderBy('id')
-        .snapshots()
-        .listen((querySnapshot) {
-      final todoList = querySnapshot.docs.map((doc) => ToDo.fromFirestore(doc)).toList();
-      _todos.clear();
-      _todos.addAll(todoList);
+  void toggleTodoStatus(ToDo todo) {
+    final index = _todos.indexWhere((item) => item.id == todo.id);
+    if (index != -1) {
+      _todos[index].isDone = !_todos[index].isDone;
       notifyListeners();
-    });
+    }
   }
 
-  Future<void> addTodo(String todoText) async {
-    final timestamp = DateTime.now().millisecondsSinceEpoch;
-    final randomValue = Random().nextInt(900000) + 100000;
-    final id = '$timestamp$randomValue';
-
-    final newTodo = ToDo(id: id, todoText: todoText);
-    await FirebaseFirestore.instance.collection('todos').doc(id).set(newTodo.toJson());
+  void addTodo(String todoText) {
+    final newTodo = ToDo(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      todoText: todoText,
+    );
+    _todos.add(newTodo);
     notifyListeners();
   }
 
-  Future<void> editTodo(ToDo todo, String newText) async {
-    await FirebaseFirestore.instance.collection('todos').doc(todo.id).update({'todoText': newText});
+  Future<void> _saveTodoList() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('todoList', jsonEncode(_todos));
+  }
+
+  Future<void> loadTodoList() async {
+    final prefs = await SharedPreferences.getInstance();
+    final todoListJson = prefs.getString('todoList');
+    if (todoListJson != null) {
+      _todos.clear();
+      _todos.addAll(jsonDecode(todoListJson).map<ToDo>((item) => ToDo.fromJson(item)).toList());
+      notifyListeners();
+    }
+  }
+
+  void editTodo(ToDo todo, String newText) {
+    final index = _todos.indexWhere((item) => item.id == todo.id);
+    if (index != -1) {
+      _todos[index].todoText = newText;
+      _saveTodoList();
+      notifyListeners();
+    }
+  }
+
+  void deleteTodo(String id) {
+    _todos.removeWhere((item) => item.id == id);
+    _saveTodoList();
     notifyListeners();
   }
 
-  Future<void> deleteTodo(String id) async {
-    await FirebaseFirestore.instance.collection('todos').doc(id).delete();
-    notifyListeners();
-  }
-
-  Future<void> handleToDo(ToDo todo) async {
-    final updatedTodo = ToDo(id: todo.id, todoText: todo.todoText, isDone: !todo.isDone);
-    await FirebaseFirestore.instance.collection('todos').doc(todo.id).update(updatedTodo.toJson());
-    notifyListeners();
+  void handleToDo(ToDo todo) {
+    final index = _todos.indexWhere((item) => item.id == todo.id);
+    if (index != -1) {
+      _todos[index].isDone = !_todos[index].isDone;
+      _saveTodoList();
+      notifyListeners();
+    }
   }
 
   void filterTodos(String keyword) {
