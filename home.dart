@@ -6,7 +6,7 @@ import 'package:mystic_todo/todoitems.dart';
 import 'package:provider/provider.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  const HomeScreen({Key? key});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -18,8 +18,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    Provider.of<TodoProvider>(context, listen: false).fetchTodosFromFirestore();
-    Provider.of<TodoProvider>(context, listen: false).startListeningToTodosUpdates();
+    Provider.of<TodoProvider>(context, listen: false).loadTodoList();
   }
 
   logOut() {
@@ -33,29 +32,31 @@ class _HomeScreenState extends State<HomeScreen> {
         appBar: _buildAppBar(),
         body: Stack(
           children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-              child: Column(
-                children: [
-                  searchBox(),
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.only(bottom: 50),
-                      child: ListView(
-                        children: [
-                          const SizedBox(height: 20),
-                          for (ToDo todo in toDoListProviderModel.todos.reversed)
-                            ToDoItem(
-                              todo: todo,
-                              onToDoChanged: toDoListProviderModel.handleToDo,
-                              onDeleteItem: toDoListProviderModel.deleteTodo,
-                              onEditItem: toDoListProviderModel.editTodo,
-                            ),
-                        ],
+            Container(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                child: Column(
+                  children: [
+                    searchBox(),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 50),
+                        child: ListView(
+                          children: [
+                            const SizedBox(height: 20),
+                            for (ToDo todo in toDoListProviderModel.todos.reversed)
+                              ToDoItem(
+                                todo: todo,
+                                onToDoChanged: toDoListProviderModel.handleToDo,
+                                onDeleteItem: toDoListProviderModel.deleteTodo,
+                                onEditItem: toDoListProviderModel.editTodo,
+                              ),
+                          ],
+                        ),
                       ),
-                    ),
-                  )
-                ],
+                    )
+                  ],
+                ),
               ),
             ),
             Align(
@@ -151,14 +152,16 @@ class _HomeScreenState extends State<HomeScreen> {
       title: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Text(
-            ' ToDo List',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w500,
+          Container(
+            child: const Text(
+              ' ToDo List',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
-          SizedBox(
+          Container(
             height: 40,
             width: 40,
             child: InkWell(
@@ -184,11 +187,4 @@ class _HomeScreenState extends State<HomeScreen> {
       context.read<TodoProvider>().filterTodos(enteredKeyword);
     }
   }
-  @override
-  void dispose() {
-    final todoProvider = Provider.of<TodoProvider>(context, listen: false);
-    todoProvider.todosSubscription.cancel();
-    super.dispose();
-  }
-
 }
