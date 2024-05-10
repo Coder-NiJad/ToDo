@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "262062531800",
+    "project_id": "mystictodolist",
+    "storage_bucket": "mystictodolist.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:262062531800:android:acfcd36e7ea544b77063ad",
+        "android_client_info": {
+          "package_name": "com.example.mystic_todo"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "262062531800-7tstrv243gd9pobasec6jjd3q6th26mi.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.mystic_todo",
+            "certificate_hash": "390f2e79486d053afae3943f5c2676bff0a47a89"
+          }
+        },
+        {
+          "client_id": "262062531800-8j841p6i36ttepgpu8uuqgsogaaaf4s2.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDapazSdFDu6gUoxkanwlPIsObZaswgaHs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "262062531800-8j841p6i36ttepgpu8uuqgsogaaaf4s2.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "262062531800-7qat36tgu09o8ivn6kn8279qukovvlor.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.mysticTodo"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
